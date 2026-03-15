@@ -15,6 +15,7 @@ expr:
         l=expr op=(MUL|DIV) r=expr #binOp
     |	l=expr op=(ADD|SUB) r=expr #binOp
     |	INT #int_tok
+    |   ID #id_tok
     |	'(' expr ')' #pars
     | <assoc=right> ID '=' expr # assign
     ;

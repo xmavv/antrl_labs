@@ -5,10 +5,12 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.Interval;
+import SymbolTable.GlobalSymbols;
 
 public class CalculateVisitor extends firstBaseVisitor<Integer> {
     private TokenStream tokStream = null;
     private CharStream input=null;
+    private GlobalSymbols<Integer> globals = new GlobalSymbols<>();
     public CalculateVisitor(CharStream inp) {
         super();
         this.input = inp;
@@ -60,6 +62,21 @@ public class CalculateVisitor extends firstBaseVisitor<Integer> {
     @Override
     public Integer visitPars(firstParser.ParsContext ctx) {
         return visit(ctx.expr());
+    }
+
+    @Override
+    public Integer visitAssign(firstParser.AssignContext ctx) {
+        String n = ctx.ID().getText();
+        Integer v = visit(ctx.expr());
+        if(globals.hasSymbol(n)) globals.setSymbol(n, v);
+        else globals.newSymbol(n, v);
+        return v;
+    }
+
+    @Override
+    public Integer visitId_tok(firstParser.Id_tokContext ctx) {
+        String n = ctx.ID().getText();
+        return globals.getSymbol(n);
     }
 
     @Override
