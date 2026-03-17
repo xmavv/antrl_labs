@@ -3,8 +3,14 @@ grammar first;
 prog:	stat* EOF ;
 
 stat: expr #expr_stat
-    | IF_kw '(' cond=expr ')' then=block  ('else' else=block)? #if_stat
+    | FOR '(' start=expr ';' cond=expr_log ';' stop=expr ')' then=block #for_stat
+    | WHILE '(' cond=expr_log ')' then=block #while_stat
+    | IF_kw '(' cond=expr_log ')' then=block  ('else' else=block)? #if_stat
     | '>' expr #print_stat
+    | '>' expr_log #print_stat
+    ;
+
+expr_log: l=expr op=('==' | '!=') r=expr
     ;
 
 block : stat #block_single
@@ -17,8 +23,12 @@ expr:
     |	INT #int_tok
     |   ID #id_tok
     |	'(' expr ')' #pars
-    | <assoc=right> ID '=' expr # assign
+    | <assoc=right> ID '=' expr #assign
     ;
+
+WHILE : 'while' ;
+
+FOR : 'for' ;
 
 IF_kw : 'if' ;
 

@@ -25,12 +25,30 @@ public class CalculateVisitor extends firstBaseVisitor<Integer> {
         this.input = inp;
         this.tokStream = tok;
     }
+
+    @Override
+    public Integer visitFor_stat(firstParser.For_statContext ctx) {
+        return super.visitFor_stat(ctx);
+
+//        if(visit(ctx.assign_stat().ID()))
+    }
+
     private String getText(ParserRuleContext ctx) {
         int a = ctx.start.getStartIndex();
         int b = ctx.stop.getStopIndex();
         if(input==null) throw new RuntimeException("Input stream undefined");
         return input.getText(new Interval(a,b));
     }
+
+    @Override
+    public Integer visitWhile_stat(firstParser.While_statContext ctx) {
+        while(visit(ctx.cond) != 0) {
+            visit(ctx.then);
+        }
+
+        return null;
+    }
+
     @Override
     public Integer visitIf_stat(firstParser.If_statContext ctx) {
         Integer result = 0;
@@ -46,12 +64,25 @@ public class CalculateVisitor extends firstBaseVisitor<Integer> {
 
     @Override
     public Integer visitPrint_stat(firstParser.Print_statContext ctx) {
-        var st = ctx.expr();
-        var result = visit(st);
-        System.out.printf("|%s=%d|\n", st.getText(), result); //nie drukuje ukrytych ani pominiętych spacji
-        System.out.printf("|%s=%d|\n", getText(st),  result); //drukuje wszystkie spacje
-        System.out.printf("|%s=%d|\n", tokStream.getText(st),  result); //drukuje spacje z ukrytego kanału, ale nie ->skip
-        return result;
+        if(ctx.expr_log()!=null) {
+            var st = ctx.expr_log();
+            var result =visit(st);
+            if(result != 0) {
+                System.out.printf("true\n");
+            } else {
+                System.out.printf("false\n");
+            }
+
+            return result;
+        }
+        else {
+            var st = ctx.expr();
+            var result = visit(st);
+//          System.out.printf("|%s=%d|\n", st.getText(), result); //nie drukuje ukrytych ani pominiętych spacji
+//          System.out.printf("|%s=%d|\n", getText(st),  result); //drukuje wszystkie spacje
+            System.out.printf("|%s=%d|\n", tokStream.getText(st),  result); //drukuje spacje z ukrytego kanału, ale nie ->skip
+            return result;
+        }
     }
 
     @Override
@@ -77,6 +108,17 @@ public class CalculateVisitor extends firstBaseVisitor<Integer> {
     public Integer visitId_tok(firstParser.Id_tokContext ctx) {
         String n = ctx.ID().getText();
         return globals.getSymbol(n);
+    }
+
+    @Override
+    public Integer visitExpr_log(firstParser.Expr_logContext ctx) {
+        if(ctx.op.getText().equals("=="))
+            return visit(ctx.l) == visit(ctx.r) ? 1 : 0;
+
+        if(ctx.op.getText().equals("!="))
+            return visit(ctx.expr(0)) == visit(ctx.expr(1)) ? 0 : 1;
+
+        return null;
     }
 
     @Override
